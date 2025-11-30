@@ -7,6 +7,52 @@ document.addEventListener('DOMContentLoaded', function() {
     const taskInput = document.getElementById('task-input');
     const taskList = document.getElementById('task-list');
 
+    // Initialize tasks array
+    let tasks = [];
+
+    // Load tasks from Local Storage when page loads
+    function loadTasks() {
+        const storedTasks = localStorage.getItem('tasks');
+        if (storedTasks) {
+            tasks = JSON.parse(storedTasks);
+            tasks.forEach(taskText => {
+                createTaskElement(taskText, false); // 'false' indicates not to save again to Local Storage
+            });
+        }
+    }
+
+    // Create task element in DOM
+    function createTaskElement(taskText, saveToStorage = true) {
+        // Create new list item
+        const listItem = document.createElement('li');
+        listItem.textContent = taskText;
+        
+        // Create remove button
+        const removeButton = document.createElement('button');
+        removeButton.textContent = "Remove";
+        removeButton.classList.add('remove-btn');
+        
+        // Assign onclick event to remove button
+        removeButton.onclick = function() {
+            // Remove from DOM
+            taskList.removeChild(listItem);
+            
+            // Remove from tasks array
+            const taskIndex = tasks.indexOf(taskText);
+            if (taskIndex > -1) {
+                tasks.splice(taskIndex, 1);
+                // Update Local Storage
+                localStorage.setItem('tasks', JSON.stringify(tasks));
+            }
+        };
+        
+        // Append remove button to list item
+        listItem.appendChild(removeButton);
+        
+        // Append list item to task list
+        taskList.appendChild(listItem);
+    }
+
     // Create the addTask Function
     function addTask() {
         // Retrieve and trim the task text
@@ -18,32 +64,34 @@ document.addEventListener('DOMContentLoaded', function() {
             return; // Exit the function if no task entered
         }
         
-        // Task Creation and Removal
-        // Create new list item
-        const listItem = document.createElement('li');
-        listItem.textContent = taskText;
+        // Add task to DOM
+        createTaskElement(taskText);
         
-        // Create remove button
-        const removeButton = document.createElement('button');
-        removeButton.textContent = "Remove";
-        removeButton.classList.add('remove-btn'); // Using classList.add
-        
-        // Assign onclick event to remove button
-        removeButton.onclick = function() {
-            taskList.removeChild(listItem);
-        };
-        
-        // Append remove button to list item
-        listItem.appendChild(removeButton);
-        
-        // Append list item to task list
-        taskList.appendChild(listItem);
+        // Add task to tasks array and update Local Storage
+        tasks.push(taskText);
+        localStorage.setItem('tasks', JSON.stringify(tasks));
         
         // Clear the input field
         taskInput.value = '';
         
         // Focus back to input for better UX
         taskInput.focus();
+    }
+
+    // Alternative addTask function that accepts parameters (for loading)
+    function addTaskWithParams(taskText, saveToStorage = true) {
+        if (!taskText || taskText.trim() === "") return;
+        
+        const trimmedText = taskText.trim();
+        
+        // Add task to DOM
+        createTaskElement(trimmedText);
+        
+        // Add to tasks array and update Local Storage if requested
+        if (saveToStorage) {
+            tasks.push(trimmedText);
+            localStorage.setItem('tasks', JSON.stringify(tasks));
+        }
     }
 
     // Attach Event Listeners
@@ -57,4 +105,7 @@ document.addEventListener('DOMContentLoaded', function() {
             addTask();
         }
     });
+
+    // Load tasks from Local Storage on page load
+    loadTasks();
 });
